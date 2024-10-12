@@ -10,45 +10,45 @@
             width: 100%;
         }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/protobufjs@6.11.2/dist/protobuf.min.js"></script>
 </head>
 <body>
-    <h1>Liveposition för bussar</h1>
+    <h1>Realtidsposition för bussar i Stockholm</h1>
     <div id="map"></div>
-    <script src="https://cdn.jsdelivr.net/npm/protobufjs@6.11.2/dist/protobuf.min.js"></script>
+
     <script>
         const apiKey = 'ac506a874e764f75a02d214788ec2124'; // Ersätt med din Trafiklab API-nyckel
         const vehiclePositionsURL = `https://api.resrobot.se/v2/vehiclepositions.pb?key=${apiKey}`;
 
-        function initMap(lat = 59.3293, lng = 18.0686) {
-            const map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: { lat: lat, lng: lng }
-            });
-        }
-
-        async function fetchVehiclePositions() {
-            try {
-                const response = await fetch(vehiclePositionsURL);
-                const buffer = await response.arrayBuffer();
-
-                protobuf.load("https://path-to-your-GTFS-realtime.proto", function(err, root) {
+        // Hämta och avkoda Protobuf-data från Trafiklab
+        fetch(vehiclePositionsURL)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                protobuf.load("https://www.trafiklab.se/path/to/GTFS-realtime.proto", function(err, root) {
                     if (err) throw err;
-
                     const FeedMessage = root.lookupType("transit_realtime.FeedMessage");
                     const message = FeedMessage.decode(new Uint8Array(buffer));
-                    const vehicle = message.entity[0].vehicle.position; // Exempel: hämta första bussen
+                    console.log(message);
 
-                    initMap(vehicle.latitude, vehicle.longitude);
+                    // Extrahera bussens position och visa på kartan
+                    const vehicle = message.entity[0].vehicle; // Hitta rätt buss-ID
+                    const lat = vehicle.position.latitude;
+                    const lng = vehicle.position.longitude;
+                    initMap(lat, lng);
                 });
-            } catch (error) {
-                console.error('Error fetching vehicle positions:', error);
-            }
+            })
+            .catch(error => console.error('Error fetching protobuf data:', error));
+
+        // Initialisera Leaflet-kartan
+        function initMap(lat = 59.3293, lng = 18.0686) { // Standardposition: Stockholm
+            const map = L.map('map').setView([lat, lng], 12); // Zoomnivå och position
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            L.marker([lat, lng]).addTo(map).bindPopup('Bussposition').openPopup();
         }
-
-        fetchVehiclePositions();
     </script>
-
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKLDNR_n-9xJoCHe4VAChfnLe7M3tBE1I&callback=initMap" async defer></script>
 </body>
 </html>
