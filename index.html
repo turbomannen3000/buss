@@ -1,9 +1,31 @@
-<script>
-    const map = L.map('map').setView([59.3293, 18.0686], 12); // Stockholm som startposition
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busspositioner i Stockholm</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Realtidsposition för bussar i Stockholm</h1>
+    <div id="map"></div>
 
-    // Testmarkör
-    L.marker([59.3293, 18.0686]).addTo(map).bindPopup('Testmarkör').openPopup();
-</script>
+    <script>
+        // Initiera Leaflet-kartan
+        const map = L.map('map').setView([59.3293, 18.0686], 12); // Stockholm som startposition
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Lägg till en testmarkör
+        L.marker([59.3293, 18.0686]).addTo(map).bindPopup('Testmarkör').openPopup();
+    </script>
+</body>
+</html>
