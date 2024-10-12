@@ -25,7 +25,7 @@
         fetch(vehiclePositionsURL)
             .then(response => response.arrayBuffer())
             .then(buffer => {
-                protobuf.load("GTFS-realtime.proto", function(err, root) {
+                protobuf.load("gtfs-realtime.proto", function(err, root) {
                     if (err) throw err;
                     const FeedMessage = root.lookupType("transit_realtime.FeedMessage");
                     const message = FeedMessage.decode(new Uint8Array(buffer));
