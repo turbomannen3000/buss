@@ -12,20 +12,45 @@
     </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/protobufjs@6.11.2/dist/protobuf.min.js"></script>
 </head>
 <body>
     <h1>Realtidsposition för bussar i Stockholm</h1>
     <div id="map"></div>
 
     <script>
-        // Initiera Leaflet-kartan
-        const map = L.map('map').setView([59.3293, 18.0686], 12); // Stockholm som startposition
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        const apiKey = 'ac506a874e764f75a02d214788ec2124'; // Ersätt med din Trafiklab API-nyckel
+        const vehiclePositionsURL = `https://api.resrobot.se/v2/vehiclepositions.pb?key=${apiKey}`;
 
-        // Lägg till en testmarkör
-        L.marker([59.3293, 18.0686]).addTo(map).bindPopup('Testmarkör').openPopup();
+        // Hämta och avkoda Protobuf-data från Trafiklab
+        fetch(vehiclePositionsURL)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                protobuf.load("https://www.trafiklab.se/path/to/GTFS-realtime.proto", function(err, root) {
+                    if (err) throw err;
+                    const FeedMessage = root.lookupType("transit_realtime.FeedMessage");
+                    const message = FeedMessage.decode(new Uint8Array(buffer));
+
+                    // Initiera kartan
+                    const map = L.map('map').setView([59.3293, 18.0686], 12); // Stockholm
+
+                    // Lägg till OpenStreetMap-kakel
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    // Visa busspositioner
+                    message.entity.forEach(entity => {
+                        if (entity.vehicle && entity.vehicle.position) {
+                            const lat = entity.vehicle.position.latitude;
+                            const lng = entity.vehicle.position.longitude;
+                            L.marker([lat, lng]).addTo(map)
+                                .bindPopup('Bussposition').openPopup();
+                        }
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching protobuf data:', error));
     </script>
 </body>
 </html>
